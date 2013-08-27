@@ -160,6 +160,7 @@
 		<module>visualizer/org.eclipse.cdt.visualizer-feature</module>
 
 		<module>core/org.eclipse.cdt.core.tests</module>
+<!-- 
 		<module>core/org.eclipse.cdt.ui.tests</module>
 		<module>codan/org.eclipse.cdt.codan.core.test</module>
 		<module>build/org.eclipse.cdt.managedbuilder.core.tests</module>
@@ -167,10 +168,10 @@
 		<module>build/org.eclipse.cdt.make.core.tests</module>
 		<module>build/org.eclipse.cdt.make.ui.tests</module>
 		<module>dsf-gdb/org.eclipse.cdt.tests.dsf.gdb</module>
-		
+ -->		
 		<module>build/org.eclipse.cdt.autotools.core</module>
 		<module>build/org.eclipse.cdt.autotools.docs</module>
-		<module>build/org.eclipse.cdt.autotools.tests</module>
+		<!-- <module>build/org.eclipse.cdt.autotools.tests</module> -->
 		<module>build/org.eclipse.cdt.autotools.ui</module>
 		<!--<module>build/org.eclipse.cdt.autotools.ui.tests</module>-->
 		<module>build/org.eclipse.cdt.autotools-feature</module>
@@ -192,7 +193,7 @@
 		<module>qt/org.eclipse.cdt.qt.ui</module>
 		<module>qt/org.eclipse.cdt.qt-feature</module>
 
-		<module>xlc/org.eclipse.cdt.errorparsers.xlc.tests</module>
+		<!-- <module>xlc/org.eclipse.cdt.errorparsers.xlc.tests</module> -->
 <!-- 
 		<module>lrparser/org.eclipse.cdt.core.lrparser.tests</module>
 		<module>upc/org.eclipse.cdt.core.parser.upc.tests</module>
