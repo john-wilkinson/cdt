@@ -25,16 +25,16 @@ import org.eclipse.cdt.core.testplugin.CModelMock;
 import org.eclipse.cdt.core.testplugin.ResourceHelper;
 import org.eclipse.cdt.core.testplugin.util.BaseTestCase;
 import org.eclipse.cdt.internal.core.settings.model.CProjectDescriptionManager;
-import org.eclipse.core.filesystem.EFS;
 import org.eclipse.core.filesystem.IFileInfo;
-import org.eclipse.core.filesystem.provider.FileInfo;
-import org.eclipse.core.internal.filesystem.local.LocalFile;
 import org.eclipse.core.internal.filesystem.local.LocalFileNativesManager;
 import org.eclipse.core.internal.resources.File;
 import org.eclipse.core.internal.resources.ResourceInfo;
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IResource;
+import org.eclipse.core.resources.IResourceChangeEvent;
+import org.eclipse.core.resources.IResourceChangeListener;
+import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.IPath;
 
 /**
@@ -191,12 +191,45 @@ public class LanguageSettingsPersistenceProjectTests extends BaseTestCase {
 		return location.toString();
 	}
 
+	private boolean enableAction = false;
+	private Exception ex = null;
+	private Thread mainThread = null;
+	private Thread listenerThread = null;
+
+	IResourceChangeListener listener = new IResourceChangeListener() {
+		@Override
+		public void resourceChanged(IResourceChangeEvent event) {
+			if (enableAction) {
+				listenerThread = Thread.currentThread();
+//				if (listenerThread != mainThread) {
+					Exception e = new Exception("thread=[" + listenerThread.getName() + "]");
+					ex = e;
+					enableAction = false;
+//					StackTraceElement[] stack = e.getStackTrace();
+//					for (StackTraceElement element : stack) {
+//						if (element.getMethodName().equals("refreshLocal")) {
+//							ex = e;
+//							enableAction =false;
+//							break;
+//						}
+//					}
+//				}
+			}
+		}
+	};
 
 	/**
 	 * Test split storage in a real project 100 times.
 	 */
 	public void testProjectPersistence_RealProjectSplitStorage_100() throws Exception {
 		// TODO
+		mainThread = Thread.currentThread();
+		listenerThread = mainThread;
+		ResourcesPlugin.getWorkspace().addResourceChangeListener(listener);
+
+		
+		
+		
 		String usingNatives = "LocalFileNativesManager.DEFAULT";
 		if (LocalFileNativesManager.isUsingNatives()) {
 			usingNatives = "LocalFileNativesManager.isUsingNatives";
@@ -378,6 +411,7 @@ public class LanguageSettingsPersistenceProjectTests extends BaseTestCase {
 
 				// Move project storage back
 				project.open(null);
+				enableAction =true;
 				String xmlStorageFilePrjLocation = xmlStorageFilePrj.getLocation().toOSString();
 				java.io.File xmlFile = new java.io.File(xmlStorageFilePrjLocation);
 				xmlFile.delete();
@@ -387,73 +421,85 @@ public class LanguageSettingsPersistenceProjectTests extends BaseTestCase {
 				assertTrue("File "+xmlFile+ " does not exist", xmlFile.exists());
 				assertFalse("File "+xmlFileOut+ " still exist", xmlFileOut.exists());
 
+//				// TODO
+//				boolean isSynchronized_0/* = fastIsSynchronized((File) xmlStorageFilePrj)*/;
+//				File target = (File) xmlStorageFilePrj;
+//				String point = "";
+//				{
+//					boolean result = false;
+//					ResourceInfo info = target.getResourceInfo(false, false);
+//					if (target.exists(target.getFlags(info), true)) {
+//						LocalFile store = (LocalFile) target.getLocalManager().getStore(target);
+////						IFileInfo fileInfo = store.fetchInfo();
+////						IFileInfo fileInfo =  (FileInfo) store.fetchInfo(EFS.NONE, null);
+////						IFileInfo fileInfo = store.fetchInfo(EFS.NONE, null);
+//						IFileInfo fileInfo;
+//						java.io.File file = store.toLocalFile(0, null);
+//						String filePath = file.getAbsolutePath();
+//						{
+//							if (LocalFileNativesManager.isUsingNatives()) {
+//								FileInfo info_1 = LocalFileNativesManager.fetchFileInfo(filePath);
+//								//natives don't set the file name on all platforms
+//								if (info_1.getName().length() == 0) {
+//									String name = file.getName();
+//									//Bug 294429: make sure that substring baggage is removed
+//									info_1.setName(new String(name.toCharArray()));
+//								}
+////								return info_1;
+//								fileInfo = info_1;
+//								point += "E";
+//							} else {
+//								//in-lined non-native implementation
+//								FileInfo info_1 = new FileInfo(file.getName());
+//								final long lastModified = file.lastModified();
+//								if (lastModified <= 0) {
+//									//if the file doesn't exist, all other attributes should be default values
+//									info_1.setExists(false);
+////									return info_1;
+//									fileInfo = info_1;
+//									point += "K";
+//								} else {
+//									info_1.setLastModified(lastModified);
+//									info_1.setExists(true);
+//									info_1.setLength(file.length());
+//									info_1.setDirectory(file.isDirectory());
+//									info_1.setAttribute(EFS.ATTRIBUTE_READ_ONLY, file.exists() && !file.canWrite());
+//									info_1.setAttribute(EFS.ATTRIBUTE_HIDDEN, file.isHidden());
+////									return info_1;
+//									fileInfo = info_1;
+//									point += "P";
+//								}
+//							}
+//						}
+//						if (/*!fileInfo.isDirectory() && */info.getLocalSyncInfo() == fileInfo.getLastModified())
+//							result = true;
+//					} else {
+//						point += "X";
+//					}
+////					return result;
+//					isSynchronized_0 = result;
+//				}
+
 				// TODO
-				boolean isSynchronized_0/* = fastIsSynchronized((File) xmlStorageFilePrj)*/;
-				File target = (File) xmlStorageFilePrj;
-				String point = "";
-				{
-					boolean result = false;
-					ResourceInfo info = target.getResourceInfo(false, false);
-					if (target.exists(target.getFlags(info), true)) {
-						LocalFile store = (LocalFile) target.getLocalManager().getStore(target);
-//						IFileInfo fileInfo = store.fetchInfo();
-//						IFileInfo fileInfo =  (FileInfo) store.fetchInfo(EFS.NONE, null);
-//						IFileInfo fileInfo = store.fetchInfo(EFS.NONE, null);
-						IFileInfo fileInfo;
-						java.io.File file = store.toLocalFile(0, null);
-						String filePath = file.getAbsolutePath();
-						{
-							if (LocalFileNativesManager.isUsingNatives()) {
-								FileInfo info_1 = LocalFileNativesManager.fetchFileInfo(filePath);
-								//natives don't set the file name on all platforms
-								if (info_1.getName().length() == 0) {
-									String name = file.getName();
-									//Bug 294429: make sure that substring baggage is removed
-									info_1.setName(new String(name.toCharArray()));
-								}
-//								return info_1;
-								fileInfo = info_1;
-								point += "E";
-							} else {
-								//in-lined non-native implementation
-								FileInfo info_1 = new FileInfo(file.getName());
-								final long lastModified = file.lastModified();
-								if (lastModified <= 0) {
-									//if the file doesn't exist, all other attributes should be default values
-									info_1.setExists(false);
-//									return info_1;
-									fileInfo = info_1;
-									point += "K";
-								} else {
-									info_1.setLastModified(lastModified);
-									info_1.setExists(true);
-									info_1.setLength(file.length());
-									info_1.setDirectory(file.isDirectory());
-									info_1.setAttribute(EFS.ATTRIBUTE_READ_ONLY, file.exists() && !file.canWrite());
-									info_1.setAttribute(EFS.ATTRIBUTE_HIDDEN, file.isHidden());
-//									return info_1;
-									fileInfo = info_1;
-									point += "P";
-								}
-							}
-						}
-						if (/*!fileInfo.isDirectory() && */info.getLocalSyncInfo() == fileInfo.getLastModified())
-							result = true;
+				// Refresh storage in workspace
+				enableAction =true;
+				xmlStorageFilePrj.refreshLocal(IResource.DEPTH_ZERO, null);
+				boolean exists = xmlStorageFilePrj.exists();
+				enableAction = !exists;
+				if (enableAction) {
+					Thread.sleep(5000);
+					if (ex != null) {
+						throw ex;
 					} else {
-						point += "X";
+						fail("Listener was not activated");
 					}
-//					return result;
-					isSynchronized_0 = result;
 				}
 
-				// Refresh storage in workspace
-				xmlStorageFilePrj.refreshLocal(IResource.DEPTH_ZERO, null);
-
-				boolean isSynchronized = fastIsSynchronized((File) xmlStorageFilePrj);
-				boolean isSynchronized_1 = fastIsSynchronized((File) xmlStorageFilePrj);
-				boolean exists = xmlStorageFilePrj.exists();
-				boolean isSynchronized_2 = fastIsSynchronized((File) xmlStorageFilePrj);
-				assertTrue("i=" + i + ", point=" + point + ", " + usingNatives + ", sync=" + isSynchronized_0 + "," + isSynchronized + "," + isSynchronized_1 + "," + isSynchronized_2 + ": File "+xmlStorageFilePrj+ " does not exist", exists);
+//				boolean isSynchronized = fastIsSynchronized((File) xmlStorageFilePrj);
+//				boolean isSynchronized_1 = fastIsSynchronized((File) xmlStorageFilePrj);
+//				boolean exists = xmlStorageFilePrj.exists();
+//				boolean isSynchronized_2 = fastIsSynchronized((File) xmlStorageFilePrj);
+//				assertTrue("i=" + i + ", point=" + point + ", " + usingNatives + ", sync=" + isSynchronized_0 + "," + isSynchronized + "," + isSynchronized_1 + "," + isSynchronized_2 + ": File "+xmlStorageFilePrj+ " does not exist", exists);
 
 
 				// and close
