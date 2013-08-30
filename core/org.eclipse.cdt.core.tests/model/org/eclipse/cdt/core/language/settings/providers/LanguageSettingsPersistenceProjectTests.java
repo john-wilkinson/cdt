@@ -481,6 +481,7 @@ public class LanguageSettingsPersistenceProjectTests extends BaseTestCase {
 //				}
 
 				// TODO
+				waitForIndexer(CCorePlugin.getDefault().getCoreModel().create(project));
 				// Refresh storage in workspace
 				enableAction =true;
 				xmlStorageFilePrj.refreshLocal(IResource.DEPTH_ZERO, null);
